@@ -1,1 +1,0 @@
-# TF 2.0 operator
