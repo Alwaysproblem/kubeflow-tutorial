@@ -302,9 +302,6 @@
 
   by doing this, you can access kubeflow with your own browser of [```http://localhost:8008```](http://localhost:8008)
 
-<!-- TODO: need to fix local storage class -->
-
-
 ## tutorial
 
 - [mpi-operator](mpi-operator/README.md)
