@@ -279,6 +279,10 @@
     [https://github.com/kubeflow/katib/issues/696](https://github.com/kubeflow/katib/issues/696)
     [https://github.com/kubeflow/kubeflow/issues/4864]()
 
+## deletion
+
+- please do not use `kfctl delete -f kfctl_k8s_istio.v1.0.2.yaml` only
+- please remove pv, all namespace about kubeflow, and use `kustomize/` to delete crd.
 
 ## Access WebUI
 
