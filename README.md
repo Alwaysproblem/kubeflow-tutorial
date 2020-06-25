@@ -153,7 +153,7 @@
     #   uid: 0cb15eee-91c1-11ea-9c47-fa163e79ab21
     ```
 
-- installation (kubeflow == 0.7.1)
+- installation (kubeflow == 0.7.1, 1.0.2)
   
   ```bash
   $ mkdir -p kfinstallation && cd kfinstallation
@@ -269,8 +269,6 @@
       $ kubectl apply -k .
       ```
 
-- reinstall katib
-
 - TroubleShooting
   - Katib db faild
     [https://github.com/kubeflow/katib/issues/1115](https://github.com/kubeflow/katib/issues/1115)
@@ -278,6 +276,12 @@
     [you can reinstall katlib with kubeflow/manifests](https://github.com/kubeflow/manifests/tree/master/katib/katib-crds/base)
     [https://github.com/kubeflow/katib/issues/696](https://github.com/kubeflow/katib/issues/696)
     [https://github.com/kubeflow/kubeflow/issues/4864]()
+
+  - centraldashboard CrashLoopBackOff
+    [https://github.com/kubeflow/kubeflow/issues/4819](https://github.com/kubeflow/kubeflow/issues/4819)
+    ```bash
+    $ kubectl -n kubeflow set image deployment/centraldashboard centraldashboard=gsantomaggio/centraldashboard:node-12
+    ```
 
 ## deletion
 
