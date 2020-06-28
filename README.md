@@ -290,23 +290,40 @@
 
 ## Access WebUI
 
-- ssh to remote server and start kube-proxy port-forwarding
-- Use the following command to set up port forwarding to the Istio gateway.
+1. access through port-forwarding
+   - ssh to remote server and start kube-proxy port-forwarding
+   - Use the following command to set up port forwarding to the Istio gateway.
+
+    ```bash
+     $ export NAMESPACE=istio-system
+     $ kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
+     ```
+
+   - Access the central navigation dashboard at:
+
+     ```http://localhost:8080/``` on the remote server.
+
+   - access WebUI on your own computer through ssh forwarding
+
+     ```bash
+     $ ssh -L 8008:localhost:8080 recaller-2
+     # ssh -NT -L 8008:localhost:8080 recaller-2
+     ```
+
+2. check the port in the istio-system namespace
+
   ```bash
-  $ export NAMESPACE=istio-system
-  $ kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
+  $ kubectl get svc -n istio-system
+  # NAME                       TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                                                                                                                                                                                   AGE
+  # cluster-local-gateway      ClusterIP      10.107.15.184    <none>        80/TCP,443/TCP,31400/TCP,15011/TCP,8060/TCP,15029/TCP,15030/TCP,15031/TCP,15032/TCP                                                                                                       43h
+  # ...
+  # istio-ingressgateway       NodePort       10.101.38.62     <none>        15020:30542/TCP,80:31380/TCP,443:31390/TCP,31400:31400/TCP,15029:30857/TCP,15030:31719/TCP,15031:32540/TCP,15032:30218/TCP,15443:30275/TCP                                                43h
+  #...
+  # kfserving-ingressgateway   LoadBalancer   10.100.53.105    <pending>     15020:32151/TCP,80:32380/TCP,443:32390/TCP,31400:32400/TCP,15011:30551/TCP,8060:30340/TCP,853:30400/TCP,15029:30502/TCP,15030:30863/TCP,15031:30618/TCP,15032:30061/TCP,15443:30038/TCP   43h
+  # ...
   ```
-
-- Access the central navigation dashboard at:
-
-  ```http://localhost:8080/``` on the remote server.
-
-- access WebUI on your own computer through ssh forwarding
-
-  ```bash
-  $ ssh -L 8008:localhost:8080 recaller-2
-  # ssh -NT -L 8008:localhost:8080 recaller-2
-  ```
+  - we can see `80:31380/TCP` at the line of istio-ingressgateway
+  - so we can ssh port forward 8008->31380
 
   by doing this, you can access kubeflow with your own browser of [```http://localhost:8008```](http://localhost:8008)
 
