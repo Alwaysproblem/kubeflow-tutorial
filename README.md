@@ -283,6 +283,33 @@
     $ kubectl -n kubeflow set image deployment/centraldashboard centraldashboard=gsantomaggio/centraldashboard:node-12
     ```
 
+  - Katib not show anything
+    - reinstall katib
+    
+      ```bash
+      
+      ```
+
+    - first, in general, there is some probelm with katib-ui deployment which means the pod
+    - find problem with google chrome (404)
+      - the problem from name comfusion.
+      
+        *Note that this picture is working not for troubles.*
+
+        ![images](images/katib_problem.png)
+
+    - enter katib-ui pod
+
+      ```bash
+      docker ps | grep katib
+      # e1c374e5211a        gcr.io/kubeflow-images-public/katib/v1alpha3/katib-ui   "./katib-ui --port=8…"   19 hours ago        Up 19 hours                             k8s_katib-ui_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
+      # 022f93e6e968        k8s.gcr.io/pause:3.1                                    "/pause"                 19 hours ago        Up 19 hours                             k8s_POD_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
+      $ docker exec -it --user root e1c374e5211a sh
+      /app # cd build/static/js/
+      ## modified the name of files
+      /app # cp 2.eb2df79f.chunk.js 2.f8c45430.chunk.js
+      ```
+
 ## deletion
 
 - please do not use `kfctl delete -f kfctl_k8s_istio.v1.0.2.yaml` only
