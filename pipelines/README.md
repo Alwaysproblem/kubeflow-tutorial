@@ -3,7 +3,7 @@
 # experiments and runs deletion
 
 - need to delete all run under experiment and then delete experiment.
-- [Restful api](https://www.kubeflow.org/docs/pipelines/reference/api/kubeflow-pipeline-api-spec/)
+- [Restful api](https://www.kubeflow.org/docs/pipelines/reference/api/kubeflow-pipeline-api-spec/) and [curl](https://gist.github.com/subfuzion/08c5d85437d5d4f00e58)
 - deletion (ssh port-forward version) (the same as `run`)
 
   ```bash
