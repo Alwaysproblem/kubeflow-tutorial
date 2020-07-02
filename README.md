@@ -14,7 +14,7 @@
 
 ## Installation
 
-- [kustomize](https://kubernetes-sigs.github.io/kustomize/) installation and add to PATH (3.6.1)
+- [kustomize](https://kubernetes-sigs.github.io/kustomize/) installation and add to PATH (3.6.1) ([3.2.1](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.1) recommended just for now)
 
   ```bash
   curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
@@ -27,6 +27,54 @@
   # tar -xvf kfctl_v1.0.2_<platform>.tar.gz
   $ tar -xvf kfctl_v1.0.2-0-ga476281_linux.tar.gz
   ```
+- install canal and modify the config map to solve coredns failure
+  - install canal
+
+    ```bash
+    $ kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/canal.yaml
+    $ kubectl get po -n kube-system
+    # NAME                                     READY   STATUS    RESTARTS   AGE
+    # ...
+    # coredns-6dcc67dcbc-rrhn2                 1/1     Running   1          46d
+    # coredns-6dcc67dcbc-wjf29                 1/1     Running   1          46d
+    # ...
+    ```
+
+  - if those pod `CrashLoopBackOff`
+
+    ```bash
+    $ kubectl edit cm coredns -n kube-system
+    # # Please edit the object below. Lines beginning with a '#' will be ignored,
+    # # and an empty file will abort the edit. If an error occurs while saving this file will be
+    # # reopened with the relevant failures.
+    # #
+    # apiVersion: v1
+    # data:
+    #   Corefile: |
+    #     .:53 {
+    #         errors
+    #         health
+    #         kubernetes cluster.local in-addr.arpa ip6.arpa {
+    #           pods insecure
+    #           upstream
+    #           fallthrough in-addr.arpa ip6.arpa
+    #         }
+    #         prometheus :9153
+    #         forward . /etc/resolv.conf
+    #         cache 30
+    #         loop -------------------- this should be gone.
+    #         reload
+    #         loadbalance
+    #     }
+    # kind: ConfigMap
+    # metadata:
+    #   creationTimestamp: "2020-05-09T06:48:11Z"
+    #   name: coredns
+    #   namespace: kube-system
+    #   resourceVersion: "174"
+    #   selfLink: /api/v1/namespaces/kube-system/configmaps/coredns
+    #   uid: 0cb15eee-91c1-11ea-9c47-fa163e79ab21
+    ```
 
 - install local-path-storage-class
   - create default local storage class [Reference](https://github.com/rancher/local-path-provisioner)
@@ -104,54 +152,6 @@
     # local-path (default)   rancher.io/local-path   4m15s
     ```
 
-- install canal and modify the config map to solve coredns failure
-  - install canal
-
-    ```bash
-    $ kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/canal.yaml
-    $ kubectl get po -n kube-system
-    # NAME                                     READY   STATUS    RESTARTS   AGE
-    # ...
-    # coredns-6dcc67dcbc-rrhn2                 1/1     Running   1          46d
-    # coredns-6dcc67dcbc-wjf29                 1/1     Running   1          46d
-    # ...
-    ```
-
-  - if those pod `CrashLoopBackOff`
-
-    ```bash
-    $ kubectl edit cm coredns -n kube-system
-    # # Please edit the object below. Lines beginning with a '#' will be ignored,
-    # # and an empty file will abort the edit. If an error occurs while saving this file will be
-    # # reopened with the relevant failures.
-    # #
-    # apiVersion: v1
-    # data:
-    #   Corefile: |
-    #     .:53 {
-    #         errors
-    #         health
-    #         kubernetes cluster.local in-addr.arpa ip6.arpa {
-    #           pods insecure
-    #           upstream
-    #           fallthrough in-addr.arpa ip6.arpa
-    #         }
-    #         prometheus :9153
-    #         forward . /etc/resolv.conf
-    #         cache 30
-    #         loop -------------------- this should be gone.
-    #         reload
-    #         loadbalance
-    #     }
-    # kind: ConfigMap
-    # metadata:
-    #   creationTimestamp: "2020-05-09T06:48:11Z"
-    #   name: coredns
-    #   namespace: kube-system
-    #   resourceVersion: "174"
-    #   selfLink: /api/v1/namespaces/kube-system/configmaps/coredns
-    #   uid: 0cb15eee-91c1-11ea-9c47-fa163e79ab21
-    ```
 
 - installation (kubeflow == 0.7.1, 1.0.2)
   

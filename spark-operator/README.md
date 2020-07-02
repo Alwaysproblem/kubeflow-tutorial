@@ -39,3 +39,5 @@ https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/docs/ap
 https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/spark-docker/Dockerfile
 
 https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/docs/user-guide.md
+
+https://github.com/kubeflow/kubeflow/issues/4306
