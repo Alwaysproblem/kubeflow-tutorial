@@ -85,8 +85,7 @@
     $ wget https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
     ```
 
-  - modified local-path-storage 
-  <!-- - (maybe change namespace to kubeflow ? ) -->
+  - modified local-path-storage
 
     ```yaml
     ...
@@ -152,9 +151,8 @@
     # local-path (default)   rancher.io/local-path   4m15s
     ```
 
+- installation (kubeflow == 0.7.1)
 
-- installation (kubeflow == 0.7.1, 1.0.2)
-  
   ```bash
   $ mkdir -p kfinstallation && cd kfinstallation
   $ export PATH=$PATH:`pwd`
@@ -168,6 +166,105 @@
   $ cd ${KF_DIR}
   $ kfctl apply -V -f ${CONFIG_URI}
   ```
+
+<!-- - installation (1.0)
+  - git clone the manifest due to [#4731](https://github.com/kubeflow/kubeflow/issues/4731)
+
+    ```bash
+    $ git clone https://github.com/kubeflow/manifests
+    $ cd manifests
+    ```
+
+  - install cert-manager first(make sure there is no error on that)
+
+    ```bash
+    $ cd cert-manager/
+    $ kustomize build cert-manager-crds/base/ | kubectl apply -f -
+    $ kustomize build cert-manager-kube-system-resources/base/ | kubectl apply -f -
+    $ kustomize build cert-manager/base/ | kubectl apply -f -
+    ```
+
+  - get rid of all cert-manager things
+
+    ```yaml
+    apiVersion: kfdef.apps.kubeflow.org/v1
+    kind: KfDef
+    metadata:
+      namespace: kubeflow
+    spec:
+      applications:
+      ...
+      - kustomizeConfig:
+          overlays:
+          - application
+          repoRef:
+            name: manifests
+            path: application/application
+        name: application
+       ##########deletion start##############
+      - kustomizeConfig:
+          parameters:
+          - name: namespace
+            value: cert-manager
+          repoRef:
+            name: manifests
+            path: cert-manager/cert-manager-crds
+        name: cert-manager-crds
+      - kustomizeConfig:
+          parameters:
+          - name: namespace
+            value: kube-system
+          repoRef:
+            name: manifests
+            path: cert-manager/cert-manager-kube-system-resources
+        name: cert-manager-kube-system-resources
+      - kustomizeConfig:
+          overlays:
+          - self-signed
+          - application
+          parameters:
+          - name: namespace
+            value: cert-manager
+          repoRef:
+            name: manifests
+            path: cert-manager/cert-manager
+        name: cert-manager
+       ##########deletion end##############
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: metacontroller
+        name: metacontroller
+      ...
+      - name: manifests
+        uri: https://github.com/kubeflow/manifests/archive/v1.0.2.tar.gz
+      version: v1.0.2
+    ```
+
+  - install!!!
+
+    ```bash
+    # assume that you are under manifest
+    $ kfctl apply -f ./kfdef/kfctl_k8s_istio.v1.0.2.yaml
+    ``` -->
+
+## Deletion
+
+- all secret crd pv pvc cm api-resource apiservices sa clusterrolebindings clusterroles rolebindings roles
+- delete istio secret
+
+  ```bash
+  $ kubectl get secret -A | grep istio.io/key-and-cert | awk '{ system("/usr/bin/kubectl delete secret " $2 " -n " $1)}'
+  ```
+
+- deletion
+
+  ```bash
+  $ cd kustomize/ # the same path of kfctl_k8s_istio.v1.0.2.yaml
+  $ for i in $(ls); do kustomize build $i | kubectl delete -f -; done
+  ```
+
+## TroubleShooting
 
 - fix the metadata-deployment failed and pass user & password
   - check status
@@ -210,8 +307,8 @@
     # Sleep 1m46.017s
     ```
 
-  - fix it 
-    - download kubeflow/manifest
+- fix it
+  - download kubeflow/manifest
 
     ```bash
     $ git clone -b v0.8-branch https://github.com/kubeflow/manifests
@@ -219,106 +316,116 @@
     $ kubectl delete -k . # because v0.8-branch is not supported by kustomize 3.6.1
     ```
 
-    - modify the `metadata-deployment.yaml`
+  - modify the `metadata-deployment.yaml`
 
-      ```yaml
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: deployment
-        labels:
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment
+      labels:
+        component: server
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
           component: server
-      spec:
-        replicas: 1
-        selector:
-          matchLabels:
+      template:
+        metadata:
+          labels:
             component: server
-        template:
-          metadata:
-            labels:
-              component: server
-          spec:
-            containers:
-            - name: container
-              image: gcr.io/kubeflow-images-public/metadata:v0.1.11
-              ######### modify ############### add "-mysql_service_host=<service/metadata-db IP>", "-mysql_service_password=test",
-              command: ["./server/server", "-mysql_service_host=10.97.8.101", "-mysql_service_password=test",
-                        "--http_port=8080"]
-              ######### modify ###############
-              ports:
-              - name: backendapi
-                containerPort: 8080
+        spec:
+          containers:
+          - name: container
+            image: gcr.io/kubeflow-images-public/metadata:v0.1.11
+            ######### modify ############### add "-mysql_service_host=<service/metadata-db IP>", "-mysql_service_password=test",
+            command: ["./server/server", "-mysql_service_host=10.97.8.101", "-mysql_service_password=test",
+                      "--http_port=8080"]
+            ######### modify ###############
+            ports:
+            - name: backendapi
+              containerPort: 8080
 
-              readinessProbe:
-                httpGet:
-                  path: /api/v1alpha1/artifact_types
-                  port: backendapi
-                  httpHeaders:
-                  - name: ContentType
-                    value: application/json
-                initialDelaySeconds: 3
-                periodSeconds: 5
-                timeoutSeconds: 2
-      ---
-      ...
-      ```
-
-    - apply it
-
-      ```bash
-      $ kubectl apply -k .
-      ```
-
-- TroubleShooting
-  - Katib db faild
-    [https://github.com/kubeflow/katib/issues/1115](https://github.com/kubeflow/katib/issues/1115)
-    [https://github.com/kubeflow/katib/pull/1006](https://github.com/kubeflow/katib/pull/1006)
-    [you can reinstall katlib with kubeflow/manifests](https://github.com/kubeflow/manifests/tree/master/katib/katib-crds/base)
-    [https://github.com/kubeflow/katib/issues/696](https://github.com/kubeflow/katib/issues/696)
-    [https://github.com/kubeflow/kubeflow/issues/4864]()
-
-  - centraldashboard CrashLoopBackOff
-    [https://github.com/kubeflow/kubeflow/issues/4819](https://github.com/kubeflow/kubeflow/issues/4819)
-    ```bash
-    $ kubectl -n kubeflow set image deployment/centraldashboard centraldashboard=gsantomaggio/centraldashboard:node-12
+            readinessProbe:
+              httpGet:
+                path: /api/v1alpha1/artifact_types
+                port: backendapi
+                httpHeaders:
+                - name: ContentType
+                  value: application/json
+              initialDelaySeconds: 3
+              periodSeconds: 5
+              timeoutSeconds: 2
+    ---
+    ...
     ```
 
-  - Katib not show anything
-    - [reinstall katib](https://www.kubeflow.org/docs/components/hyperparameter-tuning/hyperparameter/)
-    
-      ```bash
-      $ git clone https://github.com/kubeflow/katib
-      $ cd ./katib/manifests/v1alpha3/ui
-      $ kubectl delete -f .
-      $ kubectl apply -f .
-      ```
+  - apply it
 
-    - first, in general, there is some probelm with katib-ui deployment which means the pod
-    - find problem with google chrome (404)
-      - the problem from name comfusion.
-      
-        *Note that this picture is working not for troubles.*
+    ```bash
+    $ kubectl apply -k .
+    ```
 
-        ![images](images/problem-katib-404.png)
+- profile can not deleted
 
-    - enter katib-ui pod
+  ```bash
+  $ kubectl delete profle/adx
+  $ kubectl patch profile/adx -p '{"metadata":{"finalizers":[]}}' --type=merge
+  ```
 
-      ```bash
-      docker ps | grep katib #(find the `katib-ui` pod)
-      # e1c374e5211a        gcr.io/kubeflow-images-public/katib/v1alpha3/katib-ui   "./katib-ui --port=8…"   19 hours ago        Up 19 hours                             k8s_katib-ui_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
-      # 022f93e6e968        k8s.gcr.io/pause:3.1                                    "/pause"                 19 hours ago        Up 19 hours                             k8s_POD_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
-      $ docker exec -it --user root e1c374e5211a sh
-      /app # cd build/static/js/
-      ## modified the name of files
-      /app # cp 2.eb2df79f.chunk.js 2.f8c45430.chunk.js
-      ```
-    here is correct
+- Katib db faild
+
+  [https://github.com/kubeflow/katib/issues/1115](https://github.com/kubeflow/katib/issues/1115)
+
+  [https://github.com/kubeflow/katib/pull/1006](https://github.com/kubeflow/katib/pull/1006)
+
+  [you can reinstall katlib with kubeflow/manifests](https://github.com/kubeflow/manifests/tree/master/katib/katib-crds/base)
+
+  [https://github.com/kubeflow/katib/issues/696](https://github.com/kubeflow/katib/issues/696)
+
+  [https://github.com/kubeflow/kubeflow/issues/4864]()
+
+- centraldashboard CrashLoopBackOff
+
+  [https://github.com/kubeflow/kubeflow/issues/4819](https://github.com/kubeflow/kubeflow/issues/4819)
+
+  ```bash
+  $ kubectl -n kubeflow set image deployment/centraldashboard centraldashboard=gsantomaggio/centraldashboard:node-12
+  $ kubectl -n kubeflow set image deployment/centraldashboard centraldashboard=gcr.io/kubeflow-images-public/centraldashboard:<none>
+  ```
+
+- Katib not show anything
+  - [reinstall katib](https://www.kubeflow.org/docs/components/hyperparameter-tuning/hyperparameter/)
+  
+    ```bash
+    $ git clone https://github.com/kubeflow/katib
+    $ cd ./katib/manifests/v1alpha3/ui
+    $ kubectl delete -f .
+    $ kubectl apply -f .
+    ```
+
+  - first, in general, there is some probelm with katib-ui deployment which means the pod
+  - find problem with google chrome (404)
+    - the problem from name comfusion.
+
+      *Note that this picture is working not for troubles.*
+
+      ![images](images/problem-katib-404.png)
+
+  - enter katib-ui pod
+
+    ```bash
+    docker ps | grep katib #(find the `katib-ui` pod)
+    # e1c374e5211a        gcr.io/kubeflow-images-public/katib/v1alpha3/katib-ui   "./katib-ui --port=8…"   19 hours ago        Up 19 hours                             k8s_katib-ui_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
+    # 022f93e6e968        k8s.gcr.io/pause:3.1                                    "/pause"                 19 hours ago        Up 19 hours                             k8s_POD_katib-ui-55566448cb-sqjfr_kubeflow_3fc3daa9-1af4-4401-a6d2-2b060ed8f421_0
+    $ docker exec -it --user root e1c374e5211a sh
+    /app # cd build/static/js/
+    ## modified the name of files
+    /app # cp 2.eb2df79f.chunk.js 2.f8c45430.chunk.js
+    ```
+
+    Here is correct:
     ![image](images/katib_problem.png)
-
-## deletion
-
-- please do not use `kfctl delete -f kfctl_k8s_istio.v1.0.2.yaml` only
-- please remove pv, all namespace about kubeflow, and use `kustomize/` to delete crd.
 
 ## Access WebUI
 
