@@ -2,6 +2,10 @@ import sys
 from random import random
 from operator import add
 
+import os
+os.environ["PYSPARK_PYTHON"] = "/usr/bin/python3"
+os.environ["PYSPARK_DRIVER_PYTHON"] = "/usr/bin/python3"
+
 from pyspark.sql import SparkSession
 from pyspark import SparkContext, SparkConf
 conf = SparkConf().setAppName('sparktest').setMaster('k8s://https://kubernetes.default.svc:443')
@@ -14,7 +18,7 @@ conf.set("spark.kubernetes.container.image", "gcr.io/spark-operator/spark-py:v2.
 conf.set("spark.kubernetes.executor.instances", "1")
 conf.set("spark.driver.bindAddress", "0.0.0.0")
 conf.set("spark.kubernetes.pyspark.pythonVersion", "3")
-conf.set("spark.driver.host", "spark")
+conf.set("spark.driver.host", "jupyter")
 conf.set("spark.driver.port", "37371")
 conf.set("spark.blockManager.port", "6060")
 
@@ -37,7 +41,6 @@ def f(_):
 
 count = spark.sparkContext.parallelize(range(1, n + 1), partitions).map(f).reduce(add)
 print("Pi is roughly %f" % (4.0 * count / n))
-
 
 
 
