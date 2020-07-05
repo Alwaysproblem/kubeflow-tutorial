@@ -5,7 +5,8 @@ metadata:
   namespace: adx
 spec:
   selector:
-    notebook-name: spark
+    # the %notebook-name is the name that you use to create a new jupyter server%
+    notebook-name: %notebook-name%
   clusterIP: None
   ports:
   - name: notebook
