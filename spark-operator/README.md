@@ -104,6 +104,7 @@ https://github.com/kubeflow/kubeflow/issues/4306
   # namespace:  3 bytes
   ```
 
+- create a new headless service for pyspark [reference](./jupyter-svc.yaml)
 - code startup
 
   ```python
@@ -123,7 +124,7 @@ https://github.com/kubeflow/kubeflow/issues/4306
   conf.set("spark.kubernetes.executor.instances", "1")
   conf.set("spark.driver.bindAddress", "0.0.0.0")
   conf.set("spark.kubernetes.pyspark.pythonVersion", "3")
-  conf.set("spark.driver.host", "spark")
+  conf.set("spark.driver.host", "jupyter") # -----> this should be the same as the service name.
   conf.set("spark.driver.port", "37371")
   conf.set("spark.blockManager.port", "6060")
   
