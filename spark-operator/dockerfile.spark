@@ -11,4 +11,6 @@ RUN python3 -m pip install -U pip \
 
 ENV NB_PREFIX /
 
+COPY jupyter-svc.yaml /home/jovyan/jupyter-svc.yaml
+
 CMD ["sh","-c", "jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
