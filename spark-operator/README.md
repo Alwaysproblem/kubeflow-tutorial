@@ -104,7 +104,10 @@ https://github.com/kubeflow/kubeflow/issues/4306
   # namespace:  3 bytes
   ```
 
-- create a new headless service for pyspark [reference](./jupyter-svc.yaml) (note: need to edit the name of service and %notebook%)
+- create a new headless service for pyspark [reference](./jupyter-svc.yaml) (note: )
+
+**note that need to edit the name of service, which is diferent from others, %notebook% in the `jupyter-svc.yaml` and `spark.driver.host` in the code**
+
 - code startup
 
   ```python
