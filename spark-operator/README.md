@@ -104,7 +104,7 @@ https://github.com/kubeflow/kubeflow/issues/4306
   # namespace:  3 bytes
   ```
 
-- create a new headless service for pyspark [reference](./jupyter-svc.yaml)
+- create a new headless service for pyspark [reference](./jupyter-svc.yaml) (note: need to edit the name of service and %notebook%)
 - code startup
 
   ```python
@@ -135,3 +135,46 @@ https://github.com/kubeflow/kubeflow/issues/4306
           .config(conf=conf)\
           .getOrCreate()
   ```
+
+## connet jupyter to vscode editor
+
+- setup notebook server with `alwaysproblem/pyspark-jupyter-notebook-k8s:v2.4.5-vscode` docker image
+
+**Note that if you use this image then you should not forgot the token**
+
+- check log from `pod/<notebook-name>-0` and find the token or url
+
+```bash
+$ kubectl logs -f pod/pyspark-0 -n adx
+# ++ id -u
+# + myuid=0
+# ++ id -g
+# + mygid=0
+# + set +e
+# ++ getent passwd 0
+# + uidentry=root:x:0:0:root:/root:/bin/bash
+# + set -e
+# + '[' -z root:x:0:0:root:/root:/bin/bash ']'
+# + SPARK_K8S_CMD=sh
+# + case "$SPARK_K8S_CMD" in
+# + echo 'Non-spark-on-k8s command provided, proceeding in pass-through mode...'
+# Non-spark-on-k8s command provided, proceeding in pass-through mode...
+# + exec /usr/bin/tini -s -- sh -c 'mv /home/pyspark-example.ipynb /home/jupyter-svc.yaml /home/jovyan/ && jupyter notebook # --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888  --NotebookApp.allow_origin='\''*'\'' --NotebookApp.# base_url=${NB_PREFIX}'
+# [I 07:23:31.734 NotebookApp] Writing notebook server cookie secret to /root/.local/share/jupyter/runtime/notebook_cookie_secret
+# [I 07:23:31.965 NotebookApp] Serving notebooks from local directory: /home/jovyan
+# [I 07:23:31.965 NotebookApp] The Jupyter Notebook is running at:
+# [I 07:23:31.965 NotebookApp] http://vscode-0:8888/notebook/adx/vscode/?token=4f50dd13dd63388a549b81bdeda235a53480ba4a83b8e8dc
+# [I 07:23:31.965 NotebookApp]  or http://127.0.0.1:8888/notebook/adx/vscode/?token=4f50dd13dd63388a549b81bdeda235a53480ba4a83b8e8dc
+# [I 07:23:31.965 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+# [C 07:23:31.969 NotebookApp] 
+#     
+#     To access the notebook, open this file in a browser:
+#         file:///root/.local/share/jupyter/runtime/nbserver-10-open.html
+#     Or copy and paste one of these URLs:
+#         http://vscode-0:8888/notebook/adx/vscode/?token=4f50dd13dd63388a549b81bdeda235a53480ba4a83b8e8dc
+#      or http://127.0.0.1:8888/notebook/adx/vscode/?token=4f50dd13dd63388a549b81bdeda235a53480ba4a83b8e8dc
+# [I 07:23:37.483 NotebookApp] 302 GET /notebook/adx/vscode/ (192.168.2.241) 0.66ms
+# [I 07:23:37.754 NotebookApp] 302 GET /notebook/adx/vscode/tree? (192.168.2.241) 0.90ms
+```
+
+- add jupyter server with [reference](https://code.visualstudio.com/docs/python/jupyter-support#_connect-to-a-remote-jupyter-server)

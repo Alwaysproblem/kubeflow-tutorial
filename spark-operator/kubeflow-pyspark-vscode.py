@@ -1,13 +1,20 @@
+#%%
+!sed -i.bak 's@%notebook-name%@vscode@g' jupyter-svc.yaml
+#%%
+!kubectl apply -f jupyter-svc.yaml
+#%%
 import sys
 from random import random
 from operator import add
-
 import os
+from pyspark.sql import SparkSession
+from pyspark import SparkContext, SparkConf
+
+#%%
 os.environ["PYSPARK_PYTHON"] = "/usr/bin/python3"
 os.environ["PYSPARK_DRIVER_PYTHON"] = "/usr/bin/python3"
 
-from pyspark.sql import SparkSession
-from pyspark import SparkContext, SparkConf
+#%%
 conf = SparkConf().setAppName('sparktest').setMaster('k8s://https://kubernetes.default.svc:443')
 conf.set("spark.submit.deployMode","client")
 conf.set("spark.kubernetes.namespace", "adx")
@@ -22,15 +29,13 @@ conf.set("spark.driver.host", "jupyter")
 conf.set("spark.driver.port", "37371")
 conf.set("spark.blockManager.port", "6060")
 
-
-
+#%%
 SparkContext(conf=conf)
 spark = SparkSession.builder\
         .config(conf=conf)\
         .getOrCreate()
 
-
-
+#%%
 partitions = 100
 n = 100000 * partitions
 
@@ -42,6 +47,11 @@ def f(_):
 count = spark.sparkContext.parallelize(range(1, n + 1), partitions).map(f).reduce(add)
 print("Pi is roughly %f" % (4.0 * count / n))
 
-
-
+#%%
 spark.stop()
+
+# %%
+os.system("kubectl delete -f jupyter-svc.yaml")
+#%%
+os.system("mv jupyter-svc.yaml.bak jupyter-svc.yaml")
+# %%
