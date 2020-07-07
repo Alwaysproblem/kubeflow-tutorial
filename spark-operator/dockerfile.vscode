@@ -14,4 +14,4 @@ ENV NB_PREFIX /
 COPY jupyter-svc.yaml /home/jupyter-svc.yaml
 COPY pyspark-example.ipynb /home/pyspark-example.ipynb
 
-CMD ["sh","-c", "mv /home/pyspark-example.ipynb /home/jupyter-svc.yaml /home/jovyan/ && jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
+CMD ["sh","-c", "mv /home/pyspark-example.ipynb /home/jupyter-svc.yaml /home/jovyan/ && jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888  --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
