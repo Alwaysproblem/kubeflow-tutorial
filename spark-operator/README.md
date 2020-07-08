@@ -111,27 +111,58 @@ https://github.com/kubeflow/kubeflow/issues/4306
 - code startup
 
   ```python
-  import sys
-  from random import random
-  from operator import add
-  
+  import os
   from pyspark.sql import SparkSession
   from pyspark import SparkContext, SparkConf
+
+  #for python3
+  os.environ["PYSPARK_PYTHON"] = "/usr/bin/python3"
+  os.environ["PYSPARK_DRIVER_PYTHON"] = "/usr/bin/python3"
+
   conf = SparkConf().setAppName('sparktest').setMaster('k8s://https://kubernetes.default.svc:443')
+
+  # set deploy mode only client support
   conf.set("spark.submit.deployMode","client")
+
+  # namespace
   conf.set("spark.kubernetes.namespace", "adx")
+
+  # authorization
   conf.set("spark.kubernetes.authenticate.driver.serviceAccountName", "default-editor")
   conf.set("spark.kubernetes.authenticate.driver.oauthToken", "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhZHgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiZGVmYXVsdC1lZGl0b3ItdG9rZW4tOXZybmwiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdC1lZGl0b3IiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJkYzlkOWY2MC00Yzk1LTRiODMtYmE5Yi1hNWEwNjZlMzFjZjEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6YWR4OmRlZmF1bHQtZWRpdG9yIn0.BX-ZEMtLicSnobcxDGJu_V6SXIb6M53ax4PNsDU0sOInWhRFI6QFzJURt3o4TFfI4x0HV5TKrdI2aCPQUw2GcCRxpZDaoMaJqL7Qb89LBn_1-gWIOPzSwCz0vHUe0LoRpWAZViuJUb6Wd1GoZGTYVJ8k_JtzdNmmIj-IxVCsgTbGP_dSlJpUhQsw0twbUpXqZEB5IEg5sSew5z59JNYJHPGSMICgkPWnL4DTeUQh3W-4K_L7JStqMvUAejFti_ZssqTr7fKwoEXWKAx4OnMYnfamy4tOgtTPNnV12IXG93oiaC0M392sA_UPkNgpUhKk3XAA4sBoBWoPk55zpwA9tg")
-  conf.set("spark.kubernetes.container.image", "gcr.io/spark-operator/spark-py:v2.4.5")
-  # conf.set("spark.kubernetes.allocation.batch.size", "5")
-  conf.set("spark.kubernetes.executor.instances", "1")
+
+  # docker image
+  # conf.set("spark.kubernetes.container.image", "gcr.io/spark-operator/spark-py:v2.4.5")
+  conf.set("spark.kubernetes.container.image", "alwaysproblem/pyspark-operator-k8s:v2.4.5-tfr")
+
+  # mount volume
+  conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.mount.path","/work")
+  conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.options.path",
+          "/home/sdev/s3mount/yongxi/training/tfRecords/")
+  conf.set("spark.kubernetes.driver.volumes.hostPath.exepv.mount.readOnly", "false")
+
+  # resources
+  # conf.set("spark.kubernetes.driver.limit.cores", 5)
+  conf.set("spark.kubernetes.executor.request.cores", 5)
+  conf.set("spark.driver.memory", "8g")
+  conf.set("saprk.executor.memory", "8g")
+  conf.set("spark.kubernetes.executor.instances", "6")
+
+  # headless services 
   conf.set("spark.driver.bindAddress", "0.0.0.0")
-  conf.set("spark.kubernetes.pyspark.pythonVersion", "3")
-  conf.set("spark.driver.host", "jupyter") # -----> this should be the same as the service name.
+  conf.set("spark.driver.host", "jupyter")
   conf.set("spark.driver.port", "37371")
   conf.set("spark.blockManager.port", "6060")
-  
-  
+
+  # customize jar package
+  conf.set("spark.jars", "local:///opt/spark/jars/spark-tensorflow-connector_2.11-1.15.0.jar")
+  # conf.set("jars", "local:///home/jovyan/tensorflow-hadoop-1.15.0.jar")
+
+  # declare python version
+  conf.set("spark.kubernetes.pyspark.pythonVersion", "3")
+
+  # unknown
+  # conf.set("spark.kubernetes.allocation.batch.size", "5")
   
   SparkContext(conf=conf)
   spark = SparkSession.builder\
