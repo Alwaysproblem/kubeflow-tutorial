@@ -185,3 +185,13 @@ $ kubectl logs -f pod/pyspark-0 -n adx
 - jupyter jar package invoke
   - the jar package need to be found in each executor (include the jupyter pod)
   - `conf.set("spark.jars", "local:///opt/spark/jars/spark-tensorflow-connector_2.11-1.15.0.jar")`
+
+- spark driver and executor volume declare
+  1. need to declare the mountPath which is for Pod
+  2. and then decare the path on the physical machine (node of k8s) with `option` keywords
+
+  ```python
+  conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.mount.path","/work")
+  conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.options.path",
+          "/home/sdev/s3mount/yongxi/training/tfRecords/")
+  ```
