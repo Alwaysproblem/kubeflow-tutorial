@@ -181,3 +181,7 @@ $ kubectl logs -f pod/pyspark-0 -n adx
 ```
 
 - add jupyter server with [reference](https://code.visualstudio.com/docs/python/jupyter-support#_connect-to-a-remote-jupyter-server)
+
+- jupyter jar package invoke
+  - the jar package need to be found in each executor (include the jupyter pod)
+  - `conf.set("spark.jars", "local:///opt/spark/jars/spark-tensorflow-connector_2.11-1.15.0.jar")`
