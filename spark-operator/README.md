@@ -139,14 +139,25 @@ https://github.com/kubeflow/kubeflow/issues/4306
   conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.mount.path","/work")
   conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.options.path",
           "/home/sdev/s3mount/yongxi/training/tfRecords/")
-  conf.set("spark.kubernetes.driver.volumes.hostPath.exepv.mount.readOnly", "false")
+  conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.mount.readOnly", "false")
+
+  conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.mount.path","/home/jovyan/data-vol-1")
+  conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.options.path",
+          "/home/sdev/s3mount/yongxi/training/rawDatasets/")
+  conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.mount.readOnly", "true")
+
+  # conf.set("spark.kubernetes.driver.volumes.hostPath.dataset.mount.path","/dataset")
+  # conf.set("spark.kubernetes.driver.volumes.hostPath.dataset.options.path",
+  #          "/home/sdev/s3mount/yongxi/training/rawDatasets/")
+  # conf.set("spark.kubernetes.driver.volumes.hostPath.dataset.mount.readOnly", "true")
+
 
   # resources
   # conf.set("spark.kubernetes.driver.limit.cores", 5)
-  conf.set("spark.kubernetes.executor.request.cores", 5)
-  conf.set("spark.driver.memory", "8g")
-  conf.set("saprk.executor.memory", "8g")
-  conf.set("spark.kubernetes.executor.instances", "6")
+  conf.set("spark.kubernetes.executor.request.cores", 4)
+  # conf.set("spark.driver.memory", "4g")
+  conf.set("saprk.executor.memory", "4g")
+  conf.set("spark.kubernetes.executor.instances", "8")
 
   # headless services 
   conf.set("spark.driver.bindAddress", "0.0.0.0")
@@ -162,7 +173,7 @@ https://github.com/kubeflow/kubeflow/issues/4306
   conf.set("spark.kubernetes.pyspark.pythonVersion", "3")
 
   # unknown
-  # conf.set("spark.kubernetes.allocation.batch.size", "5")
+  conf.set("spark.kubernetes.allocation.batch.size", "5")
   
   SparkContext(conf=conf)
   spark = SparkSession.builder\
@@ -226,3 +237,17 @@ $ kubectl logs -f pod/pyspark-0 -n adx
   conf.set("spark.kubernetes.executor.volumes.hostPath.exepv.options.path",
           "/home/sdev/s3mount/yongxi/training/tfRecords/")
   ```
+
+  3. for read dataset in jupyter notebook, it is necessary that the dataset path of the driver, which is jupyter notebook pod, and the dataset of executors should be the same
+    - for example:
+
+    if your the executors mountedPath:
+
+    ```python
+    conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.mount.path","/home/jovyan/data-vol-1")
+    conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.options.path",
+        "/home/sdev/s3mount/yongxi/training/rawDatasets/")
+    conf.set("spark.kubernetes.executor.volumes.hostPath.dataset.mount.readOnly", "true")
+    ```
+
+    then please you have same dataset in the same path under the directory `/home/jovyan/data-vol-1` of driver.
