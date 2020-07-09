@@ -2,11 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jupyter
-  namespace: adx
 spec:
   selector:
-    # the %notebook-name is the name that you use to create a new jupyter server%
-    notebook-name: %notebook-name%
+    notebook-name: notebook
   clusterIP: None
   ports:
   - name: notebook

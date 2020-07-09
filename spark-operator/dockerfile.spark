@@ -7,11 +7,14 @@ RUN apt-get update && apt-get install -y apt-transport-https gnupg2 curl \
     && apt-get autoclean
 
 RUN python3 -m pip install -U pip \ 
-    && pip3 install --no-cache-dir jupyter py4j==0.10.7
+    && pip3 install --no-cache-dir jupyter py4j==0.10.7 \
+    && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash \
+    && chmod 777 kustomize \
+    && mv kustomize /usr/local/bin
 
 ENV NB_PREFIX /
 
-COPY jupyter-svc.yaml /home/jupyter-svc.yaml
+COPY /headlessService /home/headlessService
 COPY pyspark-example.ipynb /home/pyspark-example.ipynb
 
-CMD ["sh","-c", "mv /home/pyspark-example.ipynb /home/jupyter-svc.yaml /home/jovyan/ && jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
+CMD ["sh","-c", "mv /home/pyspark-example.ipynb /home/headlessService /home/jovyan/ && jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
