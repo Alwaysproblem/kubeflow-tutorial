@@ -1,0 +1,20 @@
+# Customized Jupyter Notebook Docker with `kubectl` and pyspark
+# [reference](https://www.kubeflow.org/docs/notebooks/custom-notebook/)
+
+FROM gcr.io/spark-operator/spark-py:v2.4.5
+
+RUN apt-get update && apt-get install -y apt-transport-https gnupg2 curl \
+    && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+    && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
+    && apt-get update && apt install kubectl=1.15.10-00 -y \
+    && apt-get autoclean
+
+RUN python3 -m pip install -U pip \ 
+    && pip3 install --no-cache-dir jupyter py4j==0.10.7
+
+ENV NB_PREFIX /
+
+COPY jupyter-svc.yaml /home/jupyter-svc.yaml
+COPY pyspark-example.ipynb /home/pyspark-example.ipynb
+
+CMD ["sh","-c", "mv /home/pyspark-example.ipynb /home/jupyter-svc.yaml /home/jovyan/ && jupyter notebook --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]

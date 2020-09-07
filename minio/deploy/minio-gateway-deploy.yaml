@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  # This name uniquely identifies the Deployment
+  name: minio-deployment
+  namespace: minio-gateway
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        # Label is used as selector in the service.
+        app: minio
+    spec:
+      # Refer to the secret created earlier
+      containers:
+      - name: minio
+        # Pulls the default Minio image from Docker Hub
+        image: minio/minio
+        args:
+        - gateway
+        - s3 
+        - https://s3.lati.opera.technology
+        resources:
+          requests:
+            cpu: 8
+            memory: 8Gi
+          limits:
+            cpu: 16
+            memory: 30Gi
+        env:
+        # MinIO access key and secret key
+        - name: MINIO_ACCESS_KEY
+          value: <s3_ACCESS_KEY>
+        - name: MINIO_SECRET_KEY
+          value: <s3_SECRET_KEY>
+        ports:
+        - containerPort: 9000

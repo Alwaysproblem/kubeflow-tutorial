@@ -1,0 +1,51 @@
+apiVersion: kubeflow.org/v1
+kind: TFJob
+metadata:
+  name: multi-worker
+spec:
+  cleanPodPolicy: None
+  tfReplicaSpecs:
+    Worker:
+      replicas: 6
+      restartPolicy: OnFailure
+      template:
+        spec:
+          affinity: # podAntiAffinity makes pods doesn't like each other. 
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 70 # the priority of rules
+                  podAffinityTerm:
+                    labelSelector: # pod doesn't like the pod that `tf-job-name` in `multi-worker`
+                      matchExpressions:
+                        - key: tf-job-name
+                          operator: In
+                          values:
+                            - multi-worker
+                    topologyKey: kubernetes.io/hostname 
+                    # every different host has at least one pod 
+                    # if `kubernetes.io/os` different os like `linux`, 'mac' has at least one pod.
+          containers:
+            - name: tensorflow
+              image: kubeflow/multi_worker_strategy:v1.0
+              volumeMounts:
+              - mountPath: /data
+                name: dataset
+              - mountPath: /models
+                name: models
+              - mountPath: /logs
+                name: tblogs
+              resources:
+                request:
+                  cpu: 4
+                  memory: 10Gi
+          volumes:
+          - hostPath:
+              path: /home/sdev/s3mount/yongxi/training/CVR/
+              readOnly: true
+            name: dataset
+          - hostPath:
+              path: /home/sdev/s3mount/yongxi/training/models/cvr
+            name: models
+          - hostPath:
+              path: /home/sdev/s3mount/yongxi/TBlogs/cvr/DeepFM
+            name: tblogs

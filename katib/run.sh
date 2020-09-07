@@ -1,0 +1,23 @@
+python model.py \
+    --batch-size 4096 \
+    --embedding-size 8 \
+    --lr 0.01 \
+    --epochs 4 \
+    --num-layers 4 \
+    --num-hidden-unit 64 \
+    --dnn-bn False \
+    --l2-reg-dnn 0 \
+    --l2-reg-embedding 0 \
+    --l2-reg-linear 0 \
+    --dnn-dropout 0 \
+    --dnn-activation dice \
+    --optimizer Adam \
+    --train-path s3://train/ \
+    --valid-path s3://valid/ \
+    --version-flag-path s3://yongxi \
+    --logs-base-path s3://logs \
+    --save-path s3:/save \
+    --serving-config-current-path s3://cc \
+    --serving-config-new-path s3://new \
+    --eval-outcome-path s3://eval \
+    --config-path s3://config
