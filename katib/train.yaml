@@ -1,59 +1,29 @@
 apiVersion: kubeflow.org/v1
 kind: TFJob
 metadata:
-  name: multi-worker
+  name: katib-worker
 spec:
   cleanPodPolicy: None
   tfReplicaSpecs:
     Worker:
-      replicas: 6
+      replicas: 3
       restartPolicy: ExitCode
       template:
         spec:
           containers:
             - name: tensorflow
-              image: kubeflow/multi_worker_strategy:v1.0-minio
+              image: katib.io/logistic:test
               args:
-                - --batch-size=2048
-                - --embedding-size=4
+                - --opt=Adam
                 - --lr=0.01
-                - --epochs=4
-                - --num-layers=4
-                - --num-hidden-unit=64
-                - --dnn-bn=false
-                - --l2-reg-dnn=0
-                - --l2-reg-embedding=1e-5
-                - --l2-reg-linear=0
-                - --dnn-dropout=0
-                - --dnn-activation=relu
-                - --optimizer=Adam
-                - --train-path=s3://ASH-ADX01/yongxi/training/tfRecords/train
-                - --valid-path=s3://ASH-ADX01/yongxi/training/tfRecords/valid
-                - --version-flag-path=s3://ASH-ADX01/yongxi/training/config4train/V.flag
-                - --logs-base-path=s3://ASH-ADX01/yongxi/training/logs
-                - --save-path=s3://ASH-ADX01/yongxi/training/save
-                - --serving-config-current-path=s3://ASH-ADX01/yongxi/training/serving/model_config/config/DeepFM.config
-                - --serving-config-new-path=s3://ASH-ADX01/yongxi/training/serving/model_config/config/DeepFM.bak.config
-                - --eval-outcome-path=s3://ASH-ADX01/yongxi/training/config4train/model.best
-                - --config-path=s3://ASH-ADX01/yongxi/training/config4train/config.json
+                - --hidden-units=3
               resources:
                 request:
-                  cpu: 3
-                  memory: 10Gi
+                  cpu: 1
+                  memory: 2Gi
                 limits:
-                  cpu: 4
-                  memory: 20Gi
-              env:
-              - name: AWS_ACCESS_KEY_ID
-                value: ""
-              - name: AWS_SECRET_ACCESS_KEY
-                value: ""
-              - name: S3_USE_HTTPS
-                value: "0"
-              - name: S3_VERIFY_SSL
-                value: "0"
-              - name: S3_ENDPOINT
-                value: "minio-s3-lati-service.minio-gateway.svc.cluster.local:9000"
+                  cpu: 2
+                  memory: 4Gi
           # affinity:
           #   podAntiAffinity:
           #     preferredDuringSchedulingIgnoredDuringExecution:
