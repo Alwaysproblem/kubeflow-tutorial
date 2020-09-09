@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfserving-mointor
+  labels:
+    app: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      # securityContext:
+      #   fsGroup: 65534
+      #   runAsGroup: 65534
+      #   runAsNonRoot: true
+      #   runAsUser: 65534
+      containers:
+      - name: prometheus
+        image: alwaysproblem/prometheus:tfserving
+        args:
+          - --config.file=/tmp/prometheus/prome.yaml
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "4" 
+          limits:
+            memory: "5Gi"
+            cpu: "5"
+        ports:
+        - containerPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tfserving-monitor-service
+spec:
+  selector:
+    app: prometheus
+  # type: LoadBalancer
+  type: NodePort
+  # clusterIP: 10.0.171.239
+  ports:
+    - name: prome-http
+      protocol: TCP
+      # specify the port on all the k8s node.
+      nodePort: 30090
+      port: 9090
+      # bind to the container port
+      targetPort: 9090
