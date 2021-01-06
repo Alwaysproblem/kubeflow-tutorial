@@ -1,0 +1,103 @@
+
+apiVersion: "kubeflow.org/v1alpha3"
+kind: Experiment
+metadata:
+  namespace: kubeflow
+  name: katib-logistic
+  label:
+    app: katib-exp
+spec:
+  parallelTrialCount: 2
+  maxTrialCount: 12
+  maxFailedTrialCount: 3
+  objective:
+    type: maximize
+    goal: 0.95
+    objectiveMetricName: val_auc
+  algorithm:
+    algorithmName: bayesianoptimization
+    algorithmSettings:
+      - name: "random_state"
+        value: "10"
+  metricsCollectorSpec:
+    source:
+      fileSystemPath:
+        path: /train
+        kind: Directory
+    collector:
+      kind: TensorFlowEvent
+  parameters:
+    - name: --lr
+      parameterType: double
+      feasibleSpace:
+        min: "0.001"
+        max: "0.01"
+    - name: --hidden-units
+      parameterType: int
+      feasibleSpace:
+        min: "3"
+        max: "10"
+    - name: --opt
+      parameterType: categorical
+      feasibleSpace:
+        list:
+        - SGD
+        - Adam
+  trialTemplate:
+    goTemplate:
+        rawTemplate: |-
+          apiVersion: kubeflow.org/v1
+          kind: TFJob
+          metadata:
+            name: {{.Trial}}
+            namespace: {{.NameSpace}}
+          spec:
+            cleanPodPolicy: None
+            tfReplicaSpecs:
+              Worker:
+                replicas: 3
+                restartPolicy: ExitCode
+                template:
+                  spec:
+                    containers:
+                      - name: tensorflow
+                        image: katib.io/logistic:test
+                        args:
+                        {{- with .HyperParameters}}
+                        {{- range .}}
+                        - "{{.Name}}={{.Value}}"
+                        {{- end}}
+                        {{- end}}
+                        resources:
+                          request:
+                            cpu: 1
+                            memory: 2Gi
+                          limits:
+                            cpu: 2
+                            memory: 4Gi
+# ---
+# apiVersion: "kubeflow.org/v1"
+# kind: TFJob
+# metadata:
+#   name: {{.Trial}}
+#   namespace: {{.NameSpace}}
+# spec:
+#   tfReplicaSpecs:
+#   Worker:
+#     replicas: 1 
+#     restartPolicy: OnFailure
+#     template:
+#       spec:
+#         containers:
+#           - name: tensorflow 
+#             image: gcr.io/kubeflow-ci/tf-mnist-with-summaries:1.0
+#             imagePullPolicy: Always
+#             command:
+#               - "python"
+#               - "/var/tf_mnist/mnist_with_summaries.py"
+#               - "--log_dir=/train/metrics"
+#               {{- with .HyperParameters}}
+#               {{- range .}}
+#               - "{{.Name}}={{.Value}}"
+#               {{- end}}
+#               {{- end}}
