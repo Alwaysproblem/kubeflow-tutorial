@@ -466,6 +466,23 @@
 
   by doing this, you can access kubeflow with your own browser of [```http://localhost:8008```](http://localhost:8008)
 
+## MiniKF
+
+- need to synchornize time in virtualbox 
+  
+  ```bash
+  $ vagrant ssh
+  $ sudo apt install ntpdate
+  $ sudo ntpdate ntp.ubuntu.com
+  ```
+
+- transfer file from host to vagrant
+
+  ```bash
+  scp -P 2222 file vagrant@127.0.0.1:/home/vagrant/Desktop/
+  password: vagrant (default)
+  ```
+
 ## tutorial
 
 - [mpi-operator](mpi-operator/README.md)

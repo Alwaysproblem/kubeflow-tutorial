@@ -7,7 +7,7 @@ spec:
   default:
     predictor:
       tensorflow:
-        storageUri: "s3://serving/Toy/1/"
+        storageUri: "s3://serving/Toy"
         serviceAccount: "s3-minio"
         minReplicas: 2
         maxReplicas: 3
